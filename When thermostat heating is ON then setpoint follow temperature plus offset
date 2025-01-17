@@ -1,0 +1,43 @@
+alias: >-
+  When thermostat heating is ON then setpoint follow temperature plus offset
+  for example: 0.01 degrees offset=30Hz, 0.2=39Hz, 0.4=55hz,0.55=55hz
+description: ""
+triggers:
+  - seconds: /10
+    trigger: time_pattern
+conditions: []
+actions:
+  - variables:
+      current_temp: "{{ states('sensor.heatpump_thermostat_room_temperature') | float }}"
+      target_temp: "{{ state_attr('climate.woonkamer', 'temperature') | float }}"
+      temp_offset: "{{ states('input_number.deltat_room2setpoint') | float }}"
+      target_temp_heat: >-
+        {{ min ( 21 , max ( current_temp , min ( 18.5 , target_temp ) ) ,
+        target_temp ) + temp_offset }}
+      tth: "{{ target_temp_heat | float(0.00)}}"
+      target_temp_Quatt_off: "{{ current_temp -1 }}"
+      ttQo: "{{ target_temp_Quatt_off | float(0.00)}}"
+  - if:
+      - condition: state
+        entity_id: binary_sensor.heatpump_thermostat_heating
+        state: "on"
+      - condition: numeric_state
+        entity_id: sensor.hp1_compressor_frequency
+        above: 1
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ temp_offset == -1 }}"
+        then:
+          - action: opentherm_gw.send_transparent_command
+            data:
+              gateway_id: honeywell
+              transp_cmd: TT
+              transp_arg: "{{ttQo}}"
+        else:
+          - action: opentherm_gw.send_transparent_command
+            data:
+              gateway_id: honeywell
+              transp_cmd: TT
+              transp_arg: "{{tth}}"
+mode: single
