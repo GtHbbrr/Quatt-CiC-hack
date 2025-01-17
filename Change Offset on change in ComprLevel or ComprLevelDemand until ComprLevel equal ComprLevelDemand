@@ -1,0 +1,66 @@
+alias: >-
+  Change Offset on change in ComprLevel or ComprLevelDemand until ComprLevel
+  equal  ComprLevelDemand
+description: ""
+triggers:
+  - trigger: state
+    entity_id:
+      - input_number.compressorleveldemand
+  - trigger: state
+    entity_id:
+      - sensor.hp1_cmd_compressorlevel
+conditions:
+  - condition: numeric_state
+    entity_id: sensor.hp1_cmd_compressorlevel
+    above: 0
+  - condition: numeric_state
+    entity_id: counter.aktietimer_quatt_aan
+    above: 2
+  - condition: numeric_state
+    entity_id: input_number.deltat_room2setpoint
+    above: -1
+  - condition: template
+    value_template: >-
+      {{ (states('input_number.compressorleveldemand')|int -
+      states('sensor.hp1_cmd_compressorlevel')|int) != 0 }} 
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.hp1_r2118_defrost
+        state: "on"
+actions:
+  - repeat:
+      while:
+        - condition: template
+          value_template: >-
+            {{ (states('input_number.compressorleveldemand')|int -
+            states('sensor.hp1_cmd_compressorlevel')|int) != 0 }}  
+      sequence:
+        - variables:
+            current: "{{ states('input_number.deltat_room2setpoint') | float(0.00) }}"
+            oldlevel: "{{ states('sensor.hp1_cmd_compressorlevel') | int }}"
+        - if:
+            - condition: template
+              value_template: >-
+                {{ (states('input_number.compressorleveldemand')|int -
+                states('sensor.hp1_cmd_compressorlevel')|int) > 0 }}
+          then:
+            - data_template:
+                entity_id: input_number.deltat_room2setpoint
+                value: "{{ current + 0.01 | float(0.00) }}"
+              action: input_number.set_value
+          else:
+            - data_template:
+                entity_id: input_number.deltat_room2setpoint
+                value: "{{ current - 0.01 | float(0.00) }}"
+              action: input_number.set_value
+        - delay:
+            seconds: 5
+  - metadata: {}
+    data:
+      title: Quatt
+      message: >-
+        ComprLevel was {{ oldlevel }} is  {{
+        states('sensor.hp1_cmd_compressorlevel')|int }}
+    action: notify.mobile_app_boris
+mode: single
