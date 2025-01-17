@@ -9,7 +9,8 @@ See also: https://gathering.tweakers.net/forum/view_message/81285528
 
 The HA automations are:
 [1] When thermostat heating is ON then thermostat-room-setpoint follow thermostat-room-temperature plus offset
-[2] 
+[2] Change Offset on change in ComprLevel or ComprLevelDemand until ComprLevel equal ComprLevelDemand
+
 
 
 
