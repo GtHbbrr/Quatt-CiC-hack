@@ -19,5 +19,5 @@ actions:
         Compressor level van {{ states('sensor.hp1_cmd_compressorlevel') |
         round(0) }} naar {{ states('input_number.compressorleveldemand') |
         round(0) }}
-    action: notify.mobile_app_boris
+    action: notify.mobile_app_xxx
 mode: single
