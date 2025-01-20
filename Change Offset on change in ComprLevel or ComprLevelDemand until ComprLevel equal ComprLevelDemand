@@ -62,5 +62,5 @@ actions:
       message: >-
         ComprLevel was {{ oldlevel }} is  {{
         states('sensor.hp1_cmd_compressorlevel')|int }}
-    action: notify.mobile_app_boris
+    action: notify.mobile_app_xxx
 mode: single
